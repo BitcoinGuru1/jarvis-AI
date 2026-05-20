@@ -1,0 +1,7 @@
+.vercel
+node_modules
+.env
+.env.local
+*.log
+jarvis-content-plan.csv
+jarvis-content-plan.json

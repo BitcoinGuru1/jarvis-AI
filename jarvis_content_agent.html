@@ -1,0 +1,1620 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jarvis Content Agent</title>
+  <style>
+    :root {
+      --ink: #101319;
+      --ink-2: #171d26;
+      --panel: #ffffff;
+      --panel-2: #f5f7f4;
+      --wash: #ebe6dc;
+      --line: #d7ddd8;
+      --muted: #66717c;
+      --soft: #eef2f0;
+      --blue: #1264a3;
+      --blue-2: #0c426f;
+      --blue-soft: #e5f1fb;
+      --teal: #08735f;
+      --teal-soft: #ddf3ed;
+      --gold: #a5650f;
+      --gold-soft: #fff1cf;
+      --rose: #a33d32;
+      --rose-soft: #fae4df;
+      --shadow: 0 20px 55px rgba(22, 25, 30, 0.14);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--ink);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      background:
+        linear-gradient(90deg, rgba(16,19,25,0.04) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,19,25,0.04) 1px, transparent 1px),
+        var(--wash);
+      background-size: 42px 42px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 316px minmax(0, 1fr);
+    }
+
+    .rail {
+      position: sticky;
+      top: 0;
+      min-height: 100vh;
+      padding: 22px;
+      color: #f7f4ea;
+      background:
+        linear-gradient(180deg, rgba(18,100,163,0.24), transparent 34%),
+        var(--ink);
+      overflow: hidden;
+    }
+
+    .rail::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(180deg, black, transparent 82%);
+    }
+
+    .rail-inner {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 44px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .monogram {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.04)),
+        #1264a3;
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.22);
+      color: #ffffff;
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    .identity h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    .identity p {
+      margin: 1px 0 0;
+      color: #b8c4c9;
+      font-size: 12px;
+    }
+
+    .signal-card {
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.07);
+      min-height: 168px;
+      overflow: hidden;
+    }
+
+    #signal-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .signal-copy {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 13px;
+    }
+
+    .signal-copy span {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(8,115,95,0.22);
+      border: 1px solid rgba(80,205,174,0.28);
+      color: #dffcf3;
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .signal-copy strong {
+      display: block;
+      margin-top: 8px;
+      max-width: 215px;
+      color: #ffffff;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .rail-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .rail-metric {
+      min-height: 82px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .rail-metric:last-child {
+      grid-column: 1 / -1;
+      min-height: 76px;
+    }
+
+    .rail-metric span {
+      display: block;
+      color: #b8c4c9;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .rail-metric strong {
+      color: #ffffff;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav button {
+      position: relative;
+      width: 100%;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: #dce5e8;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .nav button span:first-child {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav button span:first-child::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #5f6c74;
+    }
+
+    .nav button.active {
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+    }
+
+    .nav button.active span:first-child::before {
+      background: #4fd1ad;
+      box-shadow: 0 0 0 4px rgba(79,209,173,0.12);
+    }
+
+    .rail-note {
+      margin-top: auto;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: var(--radius);
+      color: #c6d2d6;
+      background: rgba(255,255,255,0.06);
+      font-size: 12px;
+    }
+
+    .rail-note strong {
+      display: block;
+      color: #ffffff;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .rail-note a {
+      color: #ffffff;
+      font-weight: 750;
+    }
+
+    main {
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(270px, 380px);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .hero-copy,
+    .operator-card,
+    .panel {
+      border: 1px solid rgba(16,19,25,0.11);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      min-height: 236px;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--teal-soft);
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .hero h2 {
+      max-width: 780px;
+      margin: 14px 0 10px;
+      color: var(--ink);
+      font-size: clamp(32px, 5vw, 58px);
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin: 0;
+      color: #4e5964;
+      font-size: 16px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .operator-card {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      background:
+        linear-gradient(135deg, rgba(18,100,163,0.1), transparent 54%),
+        rgba(255,255,255,0.9);
+    }
+
+    .operator-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .operator-head strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .operator-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pulse {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 0 rgba(8,115,95,0.24);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      70% {
+        box-shadow: 0 0 0 16px rgba(8,115,95,0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(8,115,95,0);
+      }
+    }
+
+    .operator-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-stat {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 11px;
+      min-height: 78px;
+    }
+
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .mini-stat strong {
+      font-size: 20px;
+    }
+
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--ink);
+      padding: 9px 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .btn.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #ffffff;
+    }
+
+    .btn.success {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #ffffff;
+    }
+
+    .btn.ghost {
+      background: rgba(255,255,255,0.76);
+    }
+
+    .btn:disabled {
+      opacity: 0.58;
+      cursor: wait;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .panel-head h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .panel-head p,
+    .panel-head small {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: #2a313b;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+      padding: 11px 12px;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(18,100,163,0.14);
+    }
+
+    .split-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      color: var(--ink);
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chip.active {
+      border-color: #9fcfe3;
+      background: var(--blue-soft);
+      color: var(--blue-2);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 76px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      padding: 10px;
+    }
+
+    .step::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 100%;
+      bottom: 0;
+      height: 3px;
+      background: var(--teal);
+      transition: right 260ms ease;
+    }
+
+    .step.done {
+      border-color: #a8d8c9;
+      background: var(--teal-soft);
+    }
+
+    .step.done::after {
+      right: 0;
+    }
+
+    .step span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .step strong {
+      font-size: 13px;
+    }
+
+    .draft-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .draft {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 14px;
+    }
+
+    .draft::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--blue);
+    }
+
+    .draft.high::before {
+      background: var(--teal);
+    }
+
+    .draft.mid::before {
+      background: var(--gold);
+    }
+
+    .draft-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border-radius: 6px;
+      padding: 4px 8px;
+      background: var(--blue-soft);
+      color: var(--blue-2);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .tag.green {
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+
+    .tag.gold {
+      background: var(--gold-soft);
+      color: var(--gold);
+    }
+
+    .draft p {
+      margin: 0 0 12px;
+      color: #1e252d;
+      white-space: pre-wrap;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .draft-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mini-btn {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--ink);
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-btn.blue {
+      border-color: #a8cde6;
+      background: var(--blue-soft);
+      color: var(--blue-2);
+    }
+
+    .empty {
+      min-height: 160px;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      border: 1px dashed #b9c4c0;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.7);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .plan-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .plan-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .plan-row {
+      display: grid;
+      grid-template-columns: 116px minmax(0, 1fr) 126px;
+      gap: 12px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      padding: 13px;
+    }
+
+    .plan-row strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .plan-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .plan-row p {
+      margin: 0;
+      color: #242b34;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .strategy-item {
+      min-height: 180px;
+      padding: 16px;
+      border: 1px solid rgba(16,19,25,0.11);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .strategy-item h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .strategy-item ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .strategy-item li + li {
+      margin-top: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 50;
+      max-width: 330px;
+      padding: 11px 13px;
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #ffffff;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(9px);
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .rail {
+        position: relative;
+        min-height: auto;
+      }
+
+      .rail-inner {
+        min-height: auto;
+      }
+
+      .rail-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .rail-metric:last-child {
+        grid-column: auto;
+      }
+
+      .hero,
+      .layout,
+      .plan-shell {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 14px;
+      }
+
+      .rail {
+        padding: 16px;
+      }
+
+      .hero-copy {
+        padding: 18px;
+      }
+
+      .hero h2 {
+        font-size: 38px;
+      }
+
+      .rail-metrics,
+      .operator-grid,
+      .split-fields,
+      .steps,
+      .strategy-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plan-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <div class="rail-inner">
+        <div class="identity">
+          <div class="monogram">J</div>
+          <div>
+            <h1>Jarvis</h1>
+            <p>Agentic content command</p>
+          </div>
+        </div>
+
+        <div class="signal-card" aria-label="Jarvis signal visualization">
+          <canvas id="signal-canvas"></canvas>
+          <div class="signal-copy">
+            <span>Live Signal</span>
+            <strong>Clarity engine tuned for founder demand.</strong>
+          </div>
+        </div>
+
+        <div class="rail-metrics">
+          <div class="rail-metric">
+            <span>Drafts</span>
+            <strong id="metric-drafts">0</strong>
+          </div>
+          <div class="rail-metric">
+            <span>Planned</span>
+            <strong id="metric-planned">0</strong>
+          </div>
+          <div class="rail-metric">
+            <span>Avg. clarity score</span>
+            <strong id="metric-score">0%</strong>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Jarvis sections">
+          <button class="active" data-tab="generate"><span>Generate</span><span>01</span></button>
+          <button data-tab="plan"><span>Weekly Plan</span><span>02</span></button>
+          <button data-tab="strategy"><span>Conversion Map</span><span>03</span></button>
+        </nav>
+
+        <div class="rail-note">
+          <strong>Commercial target</strong>
+          Turn X attention into qualified founder strategy calls at
+          <a href="https://calendly.com/bhekiai/book" target="_blank" rel="noreferrer">$99/hr</a>.
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <section id="generate" class="view active">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">Agentic Agent Online</span>
+            <h2>Strategic founder content, generated with intent.</h2>
+            <p>Jarvis diagnoses the topic, selects the strongest angle, drafts X posts under 280 characters, scores the output, and moves winners into your weekly pipeline.</p>
+            <div class="hero-actions">
+              <button class="btn primary" id="generate-btn">Run Jarvis</button>
+              <button class="btn ghost" id="reset-btn">Clear Drafts</button>
+            </div>
+          </div>
+
+          <aside class="operator-card">
+            <div class="operator-head">
+              <div>
+                <strong>Operator Status</strong>
+                <span id="run-status">Ready for brief</span>
+              </div>
+              <div class="pulse" aria-hidden="true"></div>
+            </div>
+            <div class="operator-grid">
+              <div class="mini-stat">
+                <span>Mode</span>
+                <strong id="mode-readout">Sharp</strong>
+              </div>
+              <div class="mini-stat">
+                <span>Offer</span>
+                <strong>$99/hr</strong>
+              </div>
+              <div class="mini-stat">
+                <span>Channel</span>
+                <strong>X</strong>
+              </div>
+              <div class="mini-stat">
+                <span>CTA</span>
+                <strong>Calendly</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="layout">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Mission Brief</h3>
+                <p>Feed Jarvis a clean strategic constraint.</p>
+              </div>
+              <small>Local engine</small>
+            </div>
+
+            <div class="field">
+              <label for="audience">Audience</label>
+              <input id="audience" value="bootstrapped founders and solo operators">
+            </div>
+
+            <div class="split-fields">
+              <div class="field">
+                <label for="topic">Founder problem</label>
+                <select id="topic">
+                  <option>finding product-market fit</option>
+                  <option>pricing strategy</option>
+                  <option>sales and customer acquisition</option>
+                  <option>scaling without losing focus</option>
+                  <option>team building and leadership</option>
+                  <option>fundraising strategy</option>
+                  <option>founder burnout and decision fatigue</option>
+                  <option>decision-making clarity</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="content-type">Content type</label>
+                <select id="content-type">
+                  <option>Problem + solution</option>
+                  <option>Founder mistake</option>
+                  <option>Strategy framework</option>
+                  <option>Client win teaser</option>
+                  <option>Direct CTA</option>
+                  <option>Engagement question</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="proof">Point of view</label>
+              <textarea id="proof">Clarity compounds faster than hustle when the founder knows which problem matters most this week.</textarea>
+            </div>
+
+            <div class="field">
+              <label>Voice DNA</label>
+              <div class="chips" id="tone-row">
+                <button class="chip active" data-tone="direct">Direct</button>
+                <button class="chip" data-tone="empathetic">Empathetic</button>
+                <button class="chip" data-tone="data">Data-driven</button>
+                <button class="chip" data-tone="contrarian">Contrarian</button>
+                <button class="chip active" data-tone="premium">Premium</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="cta">Conversion move</label>
+              <select id="cta">
+                <option>If this resonates, let's talk.</option>
+                <option>This is what I help founders solve.</option>
+                <option>Book a founder strategy session.</option>
+                <option>DM me the word clarity.</option>
+                <option>No CTA, pure value.</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Agent Output</h3>
+                <p>Each draft is scored for clarity, commercial intent, and character discipline.</p>
+              </div>
+              <small id="draft-count">0 drafts</small>
+            </div>
+
+            <div class="steps" aria-label="Agent progress">
+              <div class="step" data-step="diagnose"><span>Step 1</span><strong>Diagnose problem</strong></div>
+              <div class="step" data-step="angle"><span>Step 2</span><strong>Select angle</strong></div>
+              <div class="step" data-step="draft"><span>Step 3</span><strong>Draft posts</strong></div>
+              <div class="step" data-step="score"><span>Step 4</span><strong>Score winners</strong></div>
+            </div>
+
+            <div id="post-list" class="draft-grid">
+              <div class="empty">Run Jarvis to generate your first strategic batch.</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="plan" class="view">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">Publishing Pipeline</span>
+            <h2>Build the week before the week builds you.</h2>
+            <p>Saved drafts land in a practical schedule with the slot, role, and clarity score attached.</p>
+            <div class="hero-actions">
+              <button class="btn" id="export-json">Export JSON</button>
+              <button class="btn success" id="export-csv">Export CSV</button>
+            </div>
+          </div>
+
+          <aside class="operator-card">
+            <div class="operator-head">
+              <div>
+                <strong>Queue Health</strong>
+                <span id="plan-count">0 posts</span>
+              </div>
+              <div class="pulse" aria-hidden="true"></div>
+            </div>
+            <div class="mini-stat">
+              <span>Best rhythm</span>
+              <strong>Mon / Wed / Fri</strong>
+            </div>
+            <div class="mini-stat">
+              <span>Target behavior</span>
+              <strong>Founder call booked</strong>
+            </div>
+          </aside>
+        </div>
+
+        <div class="plan-shell">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Scheduled Queue</h3>
+                <p>Move the best drafts here from the generator.</p>
+              </div>
+            </div>
+            <div id="plan-list" class="plan-list"></div>
+          </section>
+
+          <aside class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Posting Rules</h3>
+                <p>Keep the signal clean.</p>
+              </div>
+            </div>
+            <div class="draft-grid">
+              <div class="mini-stat">
+                <span>Monday</span>
+                <strong>Problem recognition</strong>
+              </div>
+              <div class="mini-stat">
+                <span>Wednesday</span>
+                <strong>Framework or insight</strong>
+              </div>
+              <div class="mini-stat">
+                <span>Friday</span>
+                <strong>Proof plus CTA</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="strategy" class="view">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">Conversion Map</span>
+            <h2>Every post should know where it is taking the reader.</h2>
+            <p>Jarvis is built around one commercial motion: attract founders with precise thinking, then invite the right ones into a strategy session.</p>
+          </div>
+          <aside class="operator-card">
+            <div class="operator-head">
+              <div>
+                <strong>North Star</strong>
+                <span>2-3 qualified calls per month</span>
+              </div>
+              <div class="pulse" aria-hidden="true"></div>
+            </div>
+            <div class="mini-stat">
+              <span>Primary CTA</span>
+              <strong>Book a session</strong>
+            </div>
+          </aside>
+        </div>
+
+        <div class="strategy-grid">
+          <article class="strategy-item">
+            <h3>Funnel Logic</h3>
+            <ul>
+              <li>Post names a painful founder constraint.</li>
+              <li>Reply adds a practical decision filter.</li>
+              <li>Profile link sends warm traffic to the offer.</li>
+              <li>Calendly converts the right-fit founder.</li>
+            </ul>
+          </article>
+
+          <article class="strategy-item">
+            <h3>Authority Signals</h3>
+            <ul>
+              <li>Use precise language instead of broad motivation.</li>
+              <li>Show the tradeoff behind each recommendation.</li>
+              <li>Talk like an operator, not a brochure.</li>
+              <li>Make the reader feel the business consequence.</li>
+            </ul>
+          </article>
+
+          <article class="strategy-item">
+            <h3>Quality Bar</h3>
+            <ul>
+              <li>One idea per post.</li>
+              <li>Founder pain in the first line.</li>
+              <li>Under 280 characters whenever possible.</li>
+              <li>CTA only when the post earns it.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const state = {
+      tones: new Set(["direct", "premium"]),
+      drafts: [],
+      planned: JSON.parse(localStorage.getItem("jarvisPlannedPosts") || "[]")
+    };
+
+    const angles = {
+      "Problem + solution": [
+        "Most founders do not need more options. They need a smaller decision surface.",
+        "The problem is rarely effort. It is usually misdirected effort.",
+        "A clear weekly constraint beats a vague quarterly ambition."
+      ],
+      "Founder mistake": [
+        "The expensive mistake is solving the loud problem before the important one.",
+        "A founder can lose a month optimizing the part of the business nobody values.",
+        "Speed without a decision filter turns momentum into noise."
+      ],
+      "Strategy framework": [
+        "Use a three-part filter: customer pain, revenue impact, founder energy.",
+        "Before you scale, separate signal from activity.",
+        "Good strategy is a weekly operating system, not a slide deck."
+      ],
+      "Client win teaser": [
+        "The win came from narrowing the next move, not adding another tactic.",
+        "A sharper offer can change the quality of every sales conversation.",
+        "When the founder stopped chasing every lead, the right leads became easier to see."
+      ],
+      "Direct CTA": [
+        "If your business feels busy but unclear, that is a fixable strategy problem.",
+        "A focused hour can remove weeks of scattered effort.",
+        "You do not need to carry every decision alone."
+      ],
+      "Engagement question": [
+        "What decision is taking up more space than it deserves this week?",
+        "Where is your business pretending activity is the same as progress?",
+        "Which problem would make everything else easier if solved first?"
+      ]
+    };
+
+    const templates = [
+      ({ topic, audience, proof, cta, angle }) => `${angle}\n\nFor ${audience}, ${topic} gets easier when the next move is specific enough to act on today.\n\n${proof}\n\n${cta}`,
+      ({ topic, proof, cta }) => `A founder stuck on ${topic} usually asks, "What should I do next?"\n\nBetter question:\n"What decision would remove the most drag this week?"\n\n${proof}\n\n${cta}`,
+      ({ topic, audience, cta }) => `${capitalize(topic)} is not solved by adding 12 more tactics.\n\nFor ${audience}, the unlock is often one clean priority, one measurable bet, and one honest constraint.\n\n${cta}`,
+      ({ topic, proof }) => `Your business is giving you signals about ${topic} every day.\n\nSeparate:\n- noise\n- symptoms\n- the actual constraint\n\n${proof}`
+    ];
+
+    const scheduleSlots = [
+      { day: "Monday", time: "09:00", angle: "Problem recognition" },
+      { day: "Wednesday", time: "13:00", angle: "Strategy insight" },
+      { day: "Friday", time: "17:00", angle: "Proof + CTA" },
+      { day: "Saturday", time: "10:00", angle: "Engagement question" }
+    ];
+
+    const qs = (selector) => document.querySelector(selector);
+    const qsa = (selector) => [...document.querySelectorAll(selector)];
+
+    function capitalize(value) {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function toast(message) {
+      const el = qs("#toast");
+      el.textContent = message;
+      el.classList.add("show");
+      window.clearTimeout(window.toastTimer);
+      window.toastTimer = window.setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function getBrief() {
+      return {
+        audience: qs("#audience").value.trim() || "founders",
+        topic: qs("#topic").value,
+        contentType: qs("#content-type").value,
+        proof: qs("#proof").value.trim(),
+        cta: qs("#cta").value,
+        tones: [...state.tones]
+      };
+    }
+
+    function normalizePost(text) {
+      const compact = text
+        .replace(/\n\n+/g, "\n\n")
+        .replace(/[ \t]+/g, " ")
+        .replace(/\n /g, "\n")
+        .trim();
+      if (compact.length <= 276) return compact;
+      const tighter = compact
+        .replace(/For bootstrapped founders and solo operators, /g, "")
+        .replace(/specific enough to act on today/g, "specific enough to act on")
+        .replace(/Clarity compounds faster than hustle/g, "Clarity beats hustle")
+        .replace(/This is what I help founders solve\./g, "I help founders solve this.");
+      if (tighter.length <= 276) return tighter;
+      return tighter.slice(0, 273).trimEnd() + "...";
+    }
+
+    function scorePost(text, cta) {
+      let score = 64;
+      if (text.length <= 240) score += 11;
+      if (text.length <= 280) score += 8;
+      if (/\b(founder|business|strategy|clarity|customer|revenue|decision)\b/i.test(text)) score += 8;
+      if (cta !== "No CTA, pure value." && text.includes(cta)) score += 6;
+      if (text.includes("?")) score += 4;
+      if (text.split("\n").filter(Boolean).length <= 5) score += 3;
+      return Math.min(98, score);
+    }
+
+    function makeDrafts() {
+      const brief = getBrief();
+      const pickedAngles = angles[brief.contentType] || angles["Problem + solution"];
+      return templates.map((template, index) => {
+        const angle = pickedAngles[index % pickedAngles.length];
+        const cta = index === 3 && brief.contentType !== "Direct CTA" ? "No CTA, pure value." : brief.cta;
+        const post = normalizePost(template({ ...brief, angle, cta: cta === "No CTA, pure value." ? "" : cta }));
+        return {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + index),
+          post,
+          hook: post.split("\n")[0],
+          score: scorePost(post, cta),
+          chars: post.length,
+          tone: brief.tones.join(", ") || "direct",
+          topic: brief.topic,
+          contentType: brief.contentType,
+          createdAt: new Date().toISOString()
+        };
+      }).sort((a, b) => b.score - a.score);
+    }
+
+    function scoreClass(score) {
+      if (score >= 90) return "high";
+      if (score >= 82) return "mid";
+      return "";
+    }
+
+    function scoreTag(score) {
+      if (score >= 90) return "green";
+      if (score >= 82) return "gold";
+      return "";
+    }
+
+    function setStep(name, done) {
+      qs(`[data-step="${name}"]`).classList.toggle("done", done);
+    }
+
+    function updateMetrics() {
+      qs("#metric-drafts").textContent = String(state.drafts.length);
+      qs("#metric-planned").textContent = String(state.planned.length);
+      const pool = state.drafts.length ? state.drafts : state.planned;
+      const avg = pool.length ? Math.round(pool.reduce((sum, item) => sum + (item.score || 0), 0) / pool.length) : 0;
+      qs("#metric-score").textContent = `${avg}%`;
+      qs("#draft-count").textContent = `${state.drafts.length} ${state.drafts.length === 1 ? "draft" : "drafts"}`;
+      qs("#plan-count").textContent = `${state.planned.length} ${state.planned.length === 1 ? "post" : "posts"}`;
+    }
+
+    function renderDrafts() {
+      const list = qs("#post-list");
+      if (!state.drafts.length) {
+        list.innerHTML = '<div class="empty">Run Jarvis to generate your first strategic batch.</div>';
+        updateMetrics();
+        return;
+      }
+
+      list.innerHTML = state.drafts.map((draft, index) => `
+        <article class="draft ${scoreClass(draft.score)}">
+          <div class="draft-head">
+            <span class="tag ${scoreTag(draft.score)}">${draft.score}% clarity</span>
+            <span class="tag">Draft ${index + 1}</span>
+          </div>
+          <p>${escapeHtml(draft.post)}</p>
+          <div class="meta">
+            <span>${draft.chars}/280 characters</span>
+            <span>${escapeHtml(draft.contentType)}</span>
+            <span>${escapeHtml(draft.tone)}</span>
+          </div>
+          <div class="draft-actions">
+            <button class="mini-btn blue" data-copy="${draft.id}">Copy</button>
+            <button class="mini-btn" data-plan="${draft.id}">Add to plan</button>
+            <button class="mini-btn" data-rewrite="${draft.id}">Tighten</button>
+          </div>
+        </article>
+      `).join("");
+      updateMetrics();
+    }
+
+    function renderPlan() {
+      const list = qs("#plan-list");
+      if (!state.planned.length) {
+        list.innerHTML = '<div class="empty">Add generated posts to build your weekly queue.</div>';
+        updateMetrics();
+        return;
+      }
+
+      list.innerHTML = state.planned.map((item, index) => {
+        const slot = item.slot || scheduleSlots[index % scheduleSlots.length];
+        return `
+          <div class="plan-row">
+            <div>
+              <strong>${slot.day}</strong>
+              <span>${slot.time} SAST</span>
+            </div>
+            <p>${escapeHtml(item.post)}</p>
+            <div>
+              <strong>${slot.angle}</strong>
+              <span>${item.score || 0}% clarity</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+      updateMetrics();
+    }
+
+    async function runJarvis() {
+      const btn = qs("#generate-btn");
+      btn.disabled = true;
+      btn.textContent = "Jarvis Thinking";
+      qs("#run-status").textContent = "Reasoning through the brief";
+      qsa(".step").forEach((step) => step.classList.remove("done"));
+
+      const steps = [
+        ["diagnose", "Diagnosing founder pain"],
+        ["angle", "Choosing the sharpest angle"],
+        ["draft", "Drafting conversion-aware posts"],
+        ["score", "Scoring clarity and intent"]
+      ];
+
+      for (const [step, label] of steps) {
+        qs("#run-status").textContent = label;
+        await new Promise((resolve) => setTimeout(resolve, 210));
+        setStep(step, true);
+      }
+
+      state.drafts = makeDrafts();
+      renderDrafts();
+      qs("#run-status").textContent = "Ready for next brief";
+      btn.disabled = false;
+      btn.textContent = "Run Jarvis";
+      toast("Jarvis generated 4 polished drafts.");
+    }
+
+    function addToPlan(id) {
+      const draft = state.drafts.find((item) => item.id === id);
+      if (!draft) return;
+      const nextSlot = scheduleSlots[state.planned.length % scheduleSlots.length];
+      state.planned.push({ ...draft, slot: nextSlot });
+      localStorage.setItem("jarvisPlannedPosts", JSON.stringify(state.planned));
+      renderPlan();
+      updateMetrics();
+      toast(`Added to ${nextSlot.day} at ${nextSlot.time}.`);
+    }
+
+    function tightenDraft(id) {
+      const draft = state.drafts.find((item) => item.id === id);
+      if (!draft) return;
+      draft.post = normalizePost(draft.post
+        .replace(/\busually\b/gi, "often")
+        .replace(/\n\n/g, "\n")
+        .replace(/The work is separating:/g, "Separate:")
+        .replace(/For bootstrapped founders and solo operators, /g, "")
+        .replace(/what should I do next/gi, "what matters next"));
+      draft.chars = draft.post.length;
+      draft.score = scorePost(draft.post, getBrief().cta);
+      renderDrafts();
+      toast("Draft tightened.");
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(
+        () => toast("Copied to clipboard."),
+        () => toast("Copy failed. Select the text manually.")
+      );
+    }
+
+    function download(filename, mime, content) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCsv() {
+      const rows = [["day", "time_sast", "angle", "score", "post"]];
+      state.planned.forEach((item, index) => {
+        const slot = item.slot || scheduleSlots[index % scheduleSlots.length];
+        rows.push([slot.day, slot.time, slot.angle, item.score || 0, item.post]);
+      });
+      const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+      download("jarvis-content-plan.csv", "text/csv", csv);
+      toast("CSV exported.");
+    }
+
+    function exportJson() {
+      download("jarvis-content-plan.json", "application/json", JSON.stringify(state.planned, null, 2));
+      toast("JSON exported.");
+    }
+
+    function drawSignal() {
+      const canvas = qs("#signal-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+      const now = Date.now() * 0.001;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#101319";
+      ctx.fillRect(0, 0, w, h);
+
+      for (let x = 14; x < w; x += 28) {
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+
+      for (let y = 12; y < h; y += 24) {
+        ctx.strokeStyle = "rgba(255,255,255,0.04)";
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      const nodes = [
+        [34, 42], [88, 28], [148, 54], [224, 28], [264, 70],
+        [52, 106], [118, 126], [178, 102], [244, 132]
+      ];
+
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i < nodes.length - 1; i += 1) {
+        const a = nodes[i];
+        const b = nodes[(i + 2) % nodes.length];
+        ctx.strokeStyle = i % 2 ? "rgba(79,209,173,0.32)" : "rgba(119,181,231,0.3)";
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+      }
+
+      nodes.forEach(([x, y], index) => {
+        const r = 3.8 + Math.sin(now * 2 + index) * 1.2;
+        ctx.fillStyle = index % 3 === 0 ? "#4fd1ad" : index % 3 === 1 ? "#77b5e7" : "#f4bc62";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawSignal);
+    }
+
+    qsa(".nav button").forEach((button) => {
+      button.addEventListener("click", () => {
+        qsa(".nav button").forEach((item) => item.classList.remove("active"));
+        qsa(".view").forEach((tab) => tab.classList.remove("active"));
+        button.classList.add("active");
+        qs(`#${button.dataset.tab}`).classList.add("active");
+        if (button.dataset.tab === "plan") renderPlan();
+      });
+    });
+
+    qsa(".chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        const tone = button.dataset.tone;
+        if (state.tones.has(tone)) {
+          state.tones.delete(tone);
+          button.classList.remove("active");
+        } else {
+          state.tones.add(tone);
+          button.classList.add("active");
+        }
+        qs("#mode-readout").textContent = state.tones.has("contrarian") ? "Edge" : state.tones.has("empathetic") ? "Warm" : "Sharp";
+      });
+    });
+
+    qs("#generate-btn").addEventListener("click", runJarvis);
+    qs("#reset-btn").addEventListener("click", () => {
+      state.drafts = [];
+      qsa(".step").forEach((step) => step.classList.remove("done"));
+      qs("#run-status").textContent = "Ready for brief";
+      renderDrafts();
+      toast("Drafts cleared.");
+    });
+
+    qs("#post-list").addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      if (button.dataset.copy) {
+        const draft = state.drafts.find((item) => item.id === button.dataset.copy);
+        if (draft) copyText(draft.post);
+      }
+      if (button.dataset.plan) addToPlan(button.dataset.plan);
+      if (button.dataset.rewrite) tightenDraft(button.dataset.rewrite);
+    });
+
+    qs("#export-csv").addEventListener("click", exportCsv);
+    qs("#export-json").addEventListener("click", exportJson);
+    window.addEventListener("resize", () => requestAnimationFrame(drawSignal), { passive: true });
+
+    renderDrafts();
+    renderPlan();
+    requestAnimationFrame(drawSignal);
+  </script>
+</body>
+</html>
